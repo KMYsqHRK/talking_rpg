@@ -57,7 +57,8 @@ class Phi2DialogueSimulator:
         base_dir = os.path.dirname(os.path.abspath(__file__))
         self.jobs = self._load_csv(os.path.join(base_dir, "data", "jobs.csv"))
         self.personalities = self._load_csv(os.path.join(base_dir, "data", "personatlities.csv"))
-        print(f"✓ Loaded {len(self.jobs)} jobs, {len(self.personalities)} personalities")
+        self.names = self._load_names(os.path.join(base_dir, "data", "names.csv"))
+        print(f"✓ Loaded {len(self.jobs)} jobs, {len(self.personalities)} personalities, {len(self.names)} names")
 
         # 対話履歴
         self.conversation_history = []
@@ -68,18 +69,17 @@ class Phi2DialogueSimulator:
         with open(path, newline='', encoding='utf-8') as f:
             return list(csv.DictReader(f))
 
-    # ファンタジー風の名前リスト
-    FANTASY_NAMES = [
-        "Ragnar", "Elara", "Thorne", "Lyria", "Kael",
-        "Seraphina", "Darius", "Mira", "Orin", "Freya",
-        "Aldric", "Nyx", "Cedric", "Isolde", "Fenris",
-    ]
+    @staticmethod
+    def _load_names(path: str) -> List[str]:
+        """名前ファイルを読み込む（1行1名前）"""
+        with open(path, encoding='utf-8') as f:
+            return [line.strip() for line in f if line.strip()]
 
     def create_random_character(self) -> Dict:
         """ランダムにジョブと性格を選んでキャラクターを生成"""
         job = random.choice(self.jobs)
         personality = random.choice(self.personalities)
-        name = random.choice(self.FANTASY_NAMES)
+        name = random.choice(self.names)
 
         character = {
             'name': name,
