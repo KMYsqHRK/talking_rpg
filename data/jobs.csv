@@ -4,8 +4,8 @@ Rogue,DPS,Dagger,ATK/LUC/AGI,Stealthy assassin with high critical hit rate,Backs
 Archer,DPS/Support,Bow,ATK/AGI,Ranged attacker with precision strikes,Multishot, Aimed Shot, Arrow Rain
 Monk,Healer/DPS,Bare Hands,ATK/WIS,Agile martial artist who heals through chi energy,Chi Heal, Flurry of Blows, Inner Fire, Meditation
 Mage,DPS,Staff,WIS/LUC,Spellcaster wielding elemental and arcane magic,Fireball, Ice Storm, Teleport
-Priest,Healer,Mace,WIS,Holy healer who supports and protects allies,Heal, Resurrection, Barrier
+Priest,Healer,Mace,WIS/DEF,Holy healer who supports and protects allies,Heal, Resurrection, Barrier
 Paladin,Tank,Sword and Shield,DEF/LUC,Holy warrior combining combat and healing,Lay on Hands, Divine Shield, Smite
-Druid,Support/Tank,Staff,WIS/LUC,Nature magic user who can shapeshift,Transform, Nature's Wrath, Entangle
+Druid,Support/Healer,Staff,WIS/LUC,Nature magic user who can shapeshift,Transform, Nature's Wrath, Entangle
 Necromancer,DPS,Scythe,WIS,Dark magic user who controls the undead,Summon Undead, Life Drain, Curse
-Bard,Support/Healer,Lute,LUC/AGI,Musical performer who buffs allies and debuffs enemies,Inspire, Sleep Song, Charm
+Bard,Support,Lute,LUC/AGI,Musical performer who buffs allies and debuffs enemies,Inspire, Sleep Song, Charm
