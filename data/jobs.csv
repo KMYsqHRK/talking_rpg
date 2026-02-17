@@ -1,5 +1,5 @@
 Class,Role,Primary_Weapon,Primary_Stat,Description,Typical_Abilities
-Warrior,Tank/DPS,Sword and Shield,ATK/DEF/AGI,Heavy armor melee fighter with high defense,Shield Bash, Taunt, Power Strike
+Warrior,Tank/DPS,Sword and Shield,ATK/DEF,Heavy armor melee fighter with high defense,Shield Bash, Taunt, Power Strike
 Rogue,DPS,Dagger,ATK/LUC/AGI,Stealthy assassin with high critical hit rate,Backstab, Stealth, Poison
 Archer,DPS/Support,Bow,ATK/AGI,Ranged attacker with precision strikes,Multishot, Aimed Shot, Arrow Rain
 Monk,Healer/DPS,Bare Hands,ATK/WIS,Agile martial artist who heals through chi energy,Chi Heal, Flurry of Blows, Inner Fire, Meditation
