@@ -3,12 +3,9 @@ Kind-hearted,Showing compassion and care for others,0,0,1,1,2,0
 Brave,Willing to face danger or difficulty,0,1,1,0,0,2
 Modest,Humble and unassuming,0,0,0,2,2,0
 Cheerful,Full of optimism and good spirits,0,1,0,0,2,2
-Patient,Able to wait calmly without complaint,0,0,2,0,2,0
 Confident,Self-assured and certain,0,1,0,1,0,2
 Timid,Shy and lacking confidence,0,0,-2,1,2,3
 Cautious,Careful and avoiding risks,0,0,2,1,0,-2
 Ambitious,Strongly desiring success,0,2,-1,0,1,1
-Stubborn,Unwilling to change opinion,0,2,2,-2,0,-2
 Arrogant,Having excessive pride,0,3,-1,-1,1,0
-Lazy,Unwilling to work or use energy,0,-1,2,0,3,-2
 Pessimistic,Tending to see the worst,0,-1,0,3,-3,1
