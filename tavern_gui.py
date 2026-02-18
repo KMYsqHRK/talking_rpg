@@ -188,14 +188,23 @@ class TavernGUI:
     def _load_assets(self):
         """画像アセット読み込み"""
         base_dir = os.path.dirname(os.path.abspath(__file__))
-        portrait_path = os.path.join(base_dir, "img", "mage-man.png")
 
+        # 背景画像
+        bg_path = os.path.join(base_dir, "img", "tavern.png")
+        if os.path.exists(bg_path):
+            raw_bg = pygame.image.load(bg_path).convert()
+            self.bg_img = pygame.transform.smoothscale(
+                raw_bg, (WINDOW_WIDTH, WINDOW_HEIGHT))
+        else:
+            self.bg_img = None
+
+        # キャラクターポートレート
+        portrait_path = os.path.join(base_dir, "img", "mage-man.png")
         if os.path.exists(portrait_path):
             raw = pygame.image.load(portrait_path).convert_alpha()
             self.portrait_img = pygame.transform.smoothscale(
                 raw, (PORTRAIT_W, PORTRAIT_H))
         else:
-            # フォールバック: プレースホルダー
             self.portrait_img = pygame.Surface((PORTRAIT_W, PORTRAIT_H))
             self.portrait_img.fill(C_WOOD_DARK)
 
@@ -207,20 +216,18 @@ class TavernGUI:
     # ---------- 描画メソッド ----------
 
     def _draw_background(self):
-        """タバーン風の背景"""
-        self.screen.fill(C_WOOD)
+        """タバーン背景画像を描画"""
+        if self.bg_img:
+            self.screen.blit(self.bg_img, (0, 0))
+        else:
+            self.screen.fill(C_WOOD)
 
-        # 木目調の横線
-        for y in range(0, WINDOW_HEIGHT, 40):
-            c = (C_WOOD[0] - 8, C_WOOD[1] - 5, C_WOOD[2] - 3)
-            pygame.draw.line(self.screen, c, (0, y), (WINDOW_WIDTH, y))
-
-        # 左パネル背景
+        # 左パネル半透明オーバーレイ
         left_bg = pygame.Surface((LEFT_PANEL_W, WINDOW_HEIGHT), pygame.SRCALPHA)
         left_bg.fill((*C_WOOD_DARK, 180))
         self.screen.blit(left_bg, (0, 0))
 
-        # 右パネル背景
+        # 右パネル半透明オーバーレイ
         right_bg = pygame.Surface((RIGHT_PANEL_W, WINDOW_HEIGHT), pygame.SRCALPHA)
         right_bg.fill((*C_WOOD_DARK, 120))
         self.screen.blit(right_bg, (LEFT_PANEL_W, 0))
@@ -576,7 +583,13 @@ class TavernGUI:
 
     def _draw_loading_screen(self):
         """ローディング画面"""
-        self.screen.fill(C_WOOD_DARK)
+        if self.bg_img:
+            self.screen.blit(self.bg_img, (0, 0))
+            overlay = pygame.Surface((WINDOW_WIDTH, WINDOW_HEIGHT), pygame.SRCALPHA)
+            overlay.fill((*C_WOOD_DARK, 180))
+            self.screen.blit(overlay, (0, 0))
+        else:
+            self.screen.fill(C_WOOD_DARK)
         txt = self.font_title.render("Loading Phi-2 Model...", True, C_GOLD)
         self.screen.blit(txt, (WINDOW_WIDTH // 2 - txt.get_width() // 2,
                                WINDOW_HEIGHT // 2 - 40))
