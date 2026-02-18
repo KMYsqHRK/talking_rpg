@@ -101,6 +101,7 @@ class TavernGUI:
     """メインのタバーン勧誘GUIクラス"""
 
     # 状態
+    ST_VILLAGE = "village"
     ST_LOADING = "loading"
     ST_WAITING = "waiting"
     ST_GREETING = "greeting"
@@ -108,11 +109,24 @@ class TavernGUI:
     ST_GENERATING = "generating"
     ST_JUDGING = "judging"
     ST_VERDICT = "verdict"
+    ST_LODGE = "lodge"
+    ST_GUILD = "guild"
+    ST_SHOP = "shop"
+    ST_ADVENTURE = "adventure"
+
+    # 村の選択肢定義
+    VILLAGE_LOCATIONS = [
+        {"name": "Guild",     "desc": "Coming soon..."},
+        {"name": "Lodge",     "desc": "Rest and recover at the inn."},
+        {"name": "Shop",      "desc": "Coming soon..."},
+        {"name": "Tavern",    "desc": "Gather party members together while sharing drinks."},
+        {"name": "Adventure", "desc": "Coming soon..."},
+    ]
 
     def __init__(self):
         pygame.init()
         self.screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
-        pygame.display.set_caption("RPG Tavern - Party Recruitment")
+        pygame.display.set_caption("RPG Village")
         self.clock = pygame.time.Clock()
 
         # フォント初期化
@@ -122,7 +136,8 @@ class TavernGUI:
         self._load_assets()
 
         # 状態
-        self.state = self.ST_LOADING
+        self.state = self.ST_VILLAGE
+        self.village_selected = 3  # デフォルト: Tavern
         self.character: Optional[Dict] = None
         self.turn_count = 0
         self.messages: List[Dict] = []  # {speaker, text, is_user}
@@ -151,18 +166,18 @@ class TavernGUI:
                         WINDOW_HEIGHT - 100, 100, 40),
             "Send", C_GOLD, C_GOLD_DIM, C_CHARCOAL
         )
+        self.btn_back = UIButton(
+            pygame.Rect(PADDING, PADDING, 120, 36),
+            "< Village", C_GOLD, C_GOLD_DIM, C_CHARCOAL
+        )
 
-        # Simulator読み込み（バックグラウンド）
+        # Simulator（Tavern選択後にロード開始）
         self.simulator: Optional[Phi2DialogueSimulator] = None
-        self._loading_thread = threading.Thread(target=self._load_simulator,
-                                                daemon=True)
-        self._loading_thread.start()
 
     # ---------- 初期化ヘルパー ----------
 
     def _init_fonts(self):
         """フォント初期化"""
-        # システムフォント検索
         candidates = ["notosanscjkjp", "notosans", "dejavusans",
                        "liberationsans", "arial", "freesans"]
         font_name = None
@@ -178,18 +193,29 @@ class TavernGUI:
             self.font_body = pygame.font.Font(path, 18)
             self.font_small = pygame.font.Font(path, 14)
             self.font_stat = pygame.font.Font(path, 16)
+            self.font_village = pygame.font.Font(path, 26)
         else:
             self.font_title = pygame.font.Font(None, 36)
             self.font_header = pygame.font.Font(None, 26)
             self.font_body = pygame.font.Font(None, 20)
             self.font_small = pygame.font.Font(None, 16)
             self.font_stat = pygame.font.Font(None, 18)
+            self.font_village = pygame.font.Font(None, 30)
 
     def _load_assets(self):
         """画像アセット読み込み"""
         base_dir = os.path.dirname(os.path.abspath(__file__))
 
-        # 背景画像
+        # 村の背景画像
+        village_path = os.path.join(base_dir, "img", "village.png")
+        if os.path.exists(village_path):
+            raw_village = pygame.image.load(village_path).convert()
+            self.village_img = pygame.transform.smoothscale(
+                raw_village, (WINDOW_WIDTH, WINDOW_HEIGHT))
+        else:
+            self.village_img = None
+
+        # 酒場の背景画像
         bg_path = os.path.join(base_dir, "img", "tavern.png")
         if os.path.exists(bg_path):
             raw_bg = pygame.image.load(bg_path).convert()
@@ -197,6 +223,15 @@ class TavernGUI:
                 raw_bg, (WINDOW_WIDTH, WINDOW_HEIGHT))
         else:
             self.bg_img = None
+
+        # 宿屋の背景画像
+        lodge_path = os.path.join(base_dir, "img", "lodge.png")
+        if os.path.exists(lodge_path):
+            raw_lodge = pygame.image.load(lodge_path).convert()
+            self.lodge_img = pygame.transform.smoothscale(
+                raw_lodge, (WINDOW_WIDTH, WINDOW_HEIGHT))
+        else:
+            self.lodge_img = None
 
         # キャラクターポートレート
         portrait_path = os.path.join(base_dir, "img", "mage-man.png")
@@ -213,7 +248,131 @@ class TavernGUI:
         self.simulator = Phi2DialogueSimulator(use_gpu=True)
         self.state = self.ST_WAITING
 
-    # ---------- 描画メソッド ----------
+    # ---------- 村画面 ----------
+
+    def _get_village_item_rects(self) -> List[pygame.Rect]:
+        """村画面のメニュー項目の当たり判定矩形リスト"""
+        x = 100
+        start_y = 280
+        item_h = 50
+        rects = []
+        for i in range(len(self.VILLAGE_LOCATIONS)):
+            rects.append(pygame.Rect(x, start_y + i * item_h, 300, item_h))
+        return rects
+
+    def _draw_village_screen(self):
+        """村の選択画面"""
+        # 背景
+        if self.village_img:
+            self.screen.blit(self.village_img, (0, 0))
+            overlay = pygame.Surface((WINDOW_WIDTH, WINDOW_HEIGHT),
+                                     pygame.SRCALPHA)
+            overlay.fill((0, 0, 0, 80))
+            self.screen.blit(overlay, (0, 0))
+        else:
+            self.screen.fill(C_BLACK)
+
+        # タイトル
+        title = self.font_title.render("Village", True, C_WHITE)
+        self.screen.blit(title, (100, 180))
+
+        sub = self.font_small.render("Where would you like to go?",
+                                     True, C_PARCHMENT_DARK)
+        self.screen.blit(sub, (100, 220))
+
+        # メニューリスト（左側縦並び）
+        item_rects = self._get_village_item_rects()
+
+        for i, (loc, rect) in enumerate(zip(self.VILLAGE_LOCATIONS,
+                                            item_rects)):
+            selected = (i == self.village_selected)
+
+            # テキスト色
+            if selected:
+                color = C_GOLD
+            else:
+                color = C_PARCHMENT_DARK
+
+            # 三角カーソル
+            if selected:
+                tri_x = rect.x - 10
+                tri_y = rect.y + rect.h // 2
+                pygame.draw.polygon(self.screen, C_GOLD, [
+                    (tri_x - 14, tri_y - 8),
+                    (tri_x - 14, tri_y + 8),
+                    (tri_x, tri_y),
+                ])
+
+            # テキスト
+            name_surf = self.font_village.render(loc["name"], True, color)
+            self.screen.blit(name_surf, (rect.x, rect.y + 8))
+
+        # 選択中の説明文（右側に表示）
+        loc = self.VILLAGE_LOCATIONS[self.village_selected]
+        desc_x = 500
+        desc_y = 400
+        for line in self._wrap_text(loc["desc"], self.font_body, 500):
+            desc_surf = self.font_body.render(line, True, C_PARCHMENT)
+            self.screen.blit(desc_surf, (desc_x, desc_y))
+            desc_y += 24
+
+        # 操作ヒント
+        hint = self.font_small.render(
+            "Up/Down to select  |  Enter or Click to confirm",
+            True, C_PARCHMENT_DARK)
+        self.screen.blit(hint, (100, WINDOW_HEIGHT - 60))
+
+    def _enter_location(self, index: int):
+        """村の選択肢に応じた画面遷移"""
+        name = self.VILLAGE_LOCATIONS[index]["name"]
+        if name == "Tavern":
+            if self.simulator:
+                # 既にロード済みなら直接待機画面へ
+                self.state = self.ST_WAITING
+            else:
+                self.state = self.ST_LOADING
+                threading.Thread(target=self._load_simulator,
+                                 daemon=True).start()
+        elif name == "Lodge":
+            self.state = self.ST_LODGE
+        elif name == "Guild":
+            self.state = self.ST_GUILD
+        elif name == "Shop":
+            self.state = self.ST_SHOP
+        elif name == "Adventure":
+            self.state = self.ST_ADVENTURE
+
+    def _return_to_village(self):
+        """どの画面からも村に戻る"""
+        self.state = self.ST_VILLAGE
+
+    # ---------- ロケーション画面（簡易） ----------
+
+    def _draw_location_screen(self, title: str, bg_img: Optional[pygame.Surface]):
+        """汎用ロケーション画面（未実装場所用）"""
+        if bg_img:
+            self.screen.blit(bg_img, (0, 0))
+            overlay = pygame.Surface((WINDOW_WIDTH, WINDOW_HEIGHT),
+                                     pygame.SRCALPHA)
+            overlay.fill((0, 0, 0, 100))
+            self.screen.blit(overlay, (0, 0))
+        else:
+            self.screen.fill(C_BLACK)
+
+        # タイトル
+        t = self.font_title.render(title, True, C_WHITE)
+        self.screen.blit(t, (WINDOW_WIDTH // 2 - t.get_width() // 2,
+                             WINDOW_HEIGHT // 2 - 60))
+
+        # 未実装メッセージ
+        msg = self.font_body.render("Coming soon...", True, C_PARCHMENT_DARK)
+        self.screen.blit(msg, (WINDOW_WIDTH // 2 - msg.get_width() // 2,
+                               WINDOW_HEIGHT // 2))
+
+        # 戻るボタン
+        self.btn_back.draw(self.screen, self.font_body)
+
+    # ---------- タバーン描画メソッド ----------
 
     def _draw_background(self):
         """タバーン背景画像を描画"""
@@ -250,13 +409,11 @@ class TavernGUI:
         y = 70
 
         if self.character:
-            # 額縁
             frame = pygame.Rect(x - 6, y - 6,
                                 PORTRAIT_W + 12, PORTRAIT_H + 12)
             pygame.draw.rect(self.screen, C_GOLD, frame, 3, border_radius=4)
             self.screen.blit(self.portrait_img, (x, y))
         else:
-            # プレースホルダー
             frame = pygame.Rect(x - 6, y - 6,
                                 PORTRAIT_W + 12, PORTRAIT_H + 12)
             pygame.draw.rect(self.screen, C_GREY, frame, 2, border_radius=4)
@@ -279,18 +436,15 @@ class TavernGUI:
         x = RIGHT_PANEL_X + PADDING
         y = 65
 
-        # 名前
         name_surf = self.font_header.render(ch['name'], True, C_GOLD)
         self.screen.blit(name_surf, (x, y))
         y += 30
 
-        # 職業・役割
         job_str = f"{ch['job']}  ({ch['role']})"
         job_surf = self.font_body.render(job_str, True, C_PARCHMENT)
         self.screen.blit(job_surf, (x, y))
         y += 24
 
-        # 性格
         pers_str = f"Personality: {ch['personality']} - {ch['personality_desc']}"
         for line in self._wrap_text(pers_str, self.font_small,
                                     RIGHT_PANEL_W - PADDING * 2):
@@ -298,7 +452,6 @@ class TavernGUI:
             self.screen.blit(surf, (x, y))
             y += 18
 
-        # 武器・能力
         y += 4
         wep = self.font_small.render(
             f"Weapon: {ch['weapon']}   |   Abilities: {ch['abilities']}",
@@ -306,7 +459,6 @@ class TavernGUI:
         self.screen.blit(wep, (x, y))
         y += 22
 
-        # ステータスバッジ
         self._draw_stats_badges(x, y, ch)
 
     def _draw_stats_badges(self, x: int, y: int, ch: Dict):
@@ -323,11 +475,9 @@ class TavernGUI:
             bx = x + i * (badge_w + gap)
             rect = pygame.Rect(bx, y, badge_w, badge_h)
 
-            # バッジ背景
             pygame.draw.rect(self.screen, C_WOOD_DARK, rect, border_radius=4)
             pygame.draw.rect(self.screen, C_GOLD_DIM, rect, 1, border_radius=4)
 
-            # 値の色
             if val > 0:
                 val_color = C_GREEN
                 val_str = f"+{val}"
@@ -347,7 +497,7 @@ class TavernGUI:
         area_x = RIGHT_PANEL_X + PADDING
         area_y = 220
         area_w = RIGHT_PANEL_W - PADDING * 2
-        area_h = WINDOW_HEIGHT - 220 - 120  # 入力欄+ステータス分を引く
+        area_h = WINDOW_HEIGHT - 220 - 120
 
         # 背景パネル（半透明で背景画像を透かす）
         bg_rect = pygame.Rect(area_x - 5, area_y - 5, area_w + 10, area_h + 10)
@@ -356,11 +506,9 @@ class TavernGUI:
         self.screen.blit(panel_bg, bg_rect.topleft)
         pygame.draw.rect(self.screen, C_GOLD_DIM, bg_rect, 1, border_radius=6)
 
-        # クリッピング
         clip_rect = pygame.Rect(area_x, area_y, area_w, area_h)
         self.screen.set_clip(clip_rect)
 
-        # メッセージ描画
         msg_y = area_y + 8 - self.scroll_offset
         bubble_pad = 10
         max_text_w = area_w - 80
@@ -373,19 +521,16 @@ class TavernGUI:
             speaker_h = 18
 
             if msg['is_user']:
-                # ユーザー: 右寄せ
                 bubble_w = min(max_text_w + bubble_pad * 2,
                                max(self.font_body.size(l)[0] for l in lines)
                                + bubble_pad * 2)
                 bx = area_x + area_w - bubble_w - 8
                 bg_color = C_USER_BG
-                # スピーカーラベル
                 sp = self.font_small.render("You", True, C_PARCHMENT_DARK)
                 if area_y <= msg_y + total_height <= area_y + area_h:
                     self.screen.blit(sp, (bx + bubble_w - sp.get_width(),
                                          msg_y + total_height))
             else:
-                # NPC: 左寄せ
                 bubble_w = min(max_text_w + bubble_pad * 2,
                                max(self.font_body.size(l)[0] for l in lines)
                                + bubble_pad * 2)
@@ -398,7 +543,6 @@ class TavernGUI:
 
             total_height += speaker_h
 
-            # 吹き出し
             bubble_rect = pygame.Rect(bx, msg_y + total_height,
                                       bubble_w, bubble_h)
             pygame.draw.rect(self.screen, bg_color, bubble_rect,
@@ -406,7 +550,6 @@ class TavernGUI:
             pygame.draw.rect(self.screen, C_WOOD, bubble_rect, 1,
                              border_radius=8)
 
-            # テキスト
             ty = msg_y + total_height + bubble_pad
             for line in lines:
                 txt = self.font_body.render(line, True, C_CHARCOAL)
@@ -415,12 +558,9 @@ class TavernGUI:
 
             total_height += bubble_h + 10
 
-        # スクロール上限を記録
         self.max_scroll = max(0, total_height - area_h + 20)
-
         self.screen.set_clip(None)
 
-        # スクロールバー
         if self.max_scroll > 0:
             bar_x = area_x + area_w + 2
             bar_h = max(20, int(area_h * area_h / (total_height + 1)))
@@ -438,17 +578,14 @@ class TavernGUI:
 
         can_type = self.state in (self.ST_GREETING, self.ST_TALKING)
 
-        # 入力ボックス
         input_rect = pygame.Rect(ix, iy, iw, ih)
         bg = C_INPUT_BG if can_type else C_GREY
         pygame.draw.rect(self.screen, bg, input_rect, border_radius=4)
         pygame.draw.rect(self.screen, C_WOOD_DARK, input_rect, 2,
                          border_radius=4)
 
-        # テキスト
         if can_type and self.input_text:
             txt = self.font_body.render(self.input_text, True, C_CHARCOAL)
-            # クリッピングで枠内に収める
             self.screen.set_clip(input_rect.inflate(-8, -4))
             self.screen.blit(txt, (ix + 8, iy + 10))
             self.screen.set_clip(None)
@@ -456,14 +593,12 @@ class TavernGUI:
             ph = self.font_body.render("Type your message...", True, C_GREY)
             self.screen.blit(ph, (ix + 8, iy + 10))
 
-        # カーソル点滅
         if can_type and (pygame.time.get_ticks() // 500) % 2 == 0:
             cx = ix + 8 + self.font_body.size(self.input_text)[0]
             cx = min(cx, ix + iw - 8)
             pygame.draw.line(self.screen, C_CHARCOAL,
                              (cx, iy + 8), (cx, iy + ih - 8), 2)
 
-        # Send ボタン
         self.btn_send.enabled = can_type and len(self.input_text.strip()) > 0
         self.btn_send.rect.topleft = (ix + iw + 10, iy)
         self.btn_send.draw(self.screen, self.font_body)
@@ -478,11 +613,9 @@ class TavernGUI:
 
         remaining = max(0, MAX_TURNS - (self.turn_count - 1))
 
-        # ラベル
         label = self.font_small.render("Turns remaining", True, C_PARCHMENT_DARK)
         self.screen.blit(label, (x - label.get_width() // 2, y))
 
-        # 残りターン数の色
         if remaining >= 3:
             color = C_GREEN
         elif remaining == 2:
@@ -495,7 +628,6 @@ class TavernGUI:
         num = self.font_title.render(str(remaining), True, color)
         self.screen.blit(num, (x - num.get_width() // 2, y + 22))
 
-        # ドットインジケーター
         dot_y = y + 62
         for i in range(MAX_TURNS):
             cx = x - (MAX_TURNS * 12) // 2 + i * 24 + 12
@@ -552,9 +684,7 @@ class TavernGUI:
 
         self.screen.blit(overlay, (0, 0))
 
-        # テキスト（フェードイン後）
         if self.verdict_frame > 15:
-            # メインテキスト
             big_font = pygame.font.Font(
                 pygame.font.match_font("notosans") or
                 pygame.font.match_font("dejavusans"),
@@ -567,14 +697,12 @@ class TavernGUI:
             ty = WINDOW_HEIGHT // 2 - 60
             self.screen.blit(txt, (tx, ty))
 
-            # 確率
             prob_str = f"YES: {self.verdict_prob:.1%}   |   {self.verdict_details.get('decision_type', '')}"
             prob = self.font_header.render(prob_str, True, C_WHITE)
             self.screen.blit(prob,
                              (WINDOW_WIDTH // 2 - prob.get_width() // 2,
                               ty + 80))
 
-            # キャラクター名
             if self.character:
                 name_str = f"{self.character['name']} the {self.character['job']}"
                 ns = self.font_body.render(name_str, True, C_PARCHMENT)
@@ -595,7 +723,6 @@ class TavernGUI:
         self.screen.blit(txt, (WINDOW_WIDTH // 2 - txt.get_width() // 2,
                                WINDOW_HEIGHT // 2 - 40))
 
-        # アニメーションドット
         dots = "." * ((pygame.time.get_ticks() // 500) % 4)
         d = self.font_header.render(dots, True, C_PARCHMENT)
         self.screen.blit(d, (WINDOW_WIDTH // 2 - d.get_width() // 2,
@@ -622,7 +749,6 @@ class TavernGUI:
         self.verdict_frame = 0
         self.input_text = ""
 
-        # 初回挨拶をバックグラウンドで生成
         self.state = self.ST_GENERATING
         self._ai_busy = True
 
@@ -662,7 +788,6 @@ class TavernGUI:
         self.state = self.ST_GENERATING
         self._ai_busy = True
 
-        # 自動スクロール
         self.scroll_offset = max(0, self.max_scroll + 100)
 
         def gen():
@@ -677,10 +802,8 @@ class TavernGUI:
                 'text': resp, 'is_user': False})
             self._ai_busy = False
 
-            # 自動スクロール
             self.scroll_offset = max(0, self.max_scroll + 200)
 
-            # ターン上限チェック
             new_remaining = MAX_TURNS - (self.turn_count - 1)
             if new_remaining <= 0:
                 self._finalize_recruitment()
@@ -725,6 +848,14 @@ class TavernGUI:
             lines.append(current)
         return lines or [""]
 
+    # ---------- タバーン系の状態判定 ----------
+
+    _TAVERN_STATES = {ST_LOADING, ST_WAITING, ST_GREETING, ST_TALKING,
+                      ST_GENERATING, ST_JUDGING, ST_VERDICT}
+
+    def _is_tavern_state(self) -> bool:
+        return self.state in self._TAVERN_STATES
+
     # ---------- メインループ ----------
 
     def run(self):
@@ -737,37 +868,96 @@ class TavernGUI:
                 if event.type == pygame.QUIT:
                     running = False
 
-                elif event.type == pygame.MOUSEBUTTONDOWN:
-                    if event.button == 1:  # 左クリック
-                        pos = event.pos
-                        if self.btn_new.clicked(pos):
-                            if self.state in (self.ST_WAITING, self.ST_GREETING,
-                                              self.ST_TALKING, self.ST_VERDICT):
-                                self._new_character()
+                # ---- 村画面 ----
+                elif self.state == self.ST_VILLAGE:
+                    if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                        item_rects = self._get_village_item_rects()
+                        for i, rect in enumerate(item_rects):
+                            if rect.collidepoint(event.pos):
+                                self.village_selected = i
+                                self._enter_location(i)
 
-                        elif self.btn_send.clicked(pos):
-                            self._send_message()
+                    elif event.type == pygame.MOUSEMOTION:
+                        item_rects = self._get_village_item_rects()
+                        for i, rect in enumerate(item_rects):
+                            if rect.collidepoint(event.pos):
+                                self.village_selected = i
+
+                    elif event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_UP:
+                            n = len(self.VILLAGE_LOCATIONS)
+                            self.village_selected = (self.village_selected - 1) % n
+                        elif event.key == pygame.K_DOWN:
+                            n = len(self.VILLAGE_LOCATIONS)
+                            self.village_selected = (self.village_selected + 1) % n
+                        elif event.key == pygame.K_RETURN:
+                            self._enter_location(self.village_selected)
+
+                # ---- 簡易ロケーション画面（Lodge/Guild/Shop/Adventure） ----
+                elif self.state in (self.ST_LODGE, self.ST_GUILD,
+                                    self.ST_SHOP, self.ST_ADVENTURE):
+                    if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                        if self.btn_back.clicked(event.pos):
+                            self._return_to_village()
+                    elif event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_ESCAPE:
+                            self._return_to_village()
+
+                # ---- タバーン系画面 ----
+                elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    pos = event.pos
+                    # 戻るボタン（タバーン画面内）
+                    if self.btn_back.clicked(pos):
+                        if self.state in (self.ST_WAITING, self.ST_GREETING,
+                                          self.ST_TALKING, self.ST_VERDICT):
+                            self._return_to_village()
+                    elif self.btn_new.clicked(pos):
+                        if self.state in (self.ST_WAITING, self.ST_GREETING,
+                                          self.ST_TALKING, self.ST_VERDICT):
+                            self._new_character()
+                    elif self.btn_send.clicked(pos):
+                        self._send_message()
 
                 elif event.type == pygame.MOUSEWHEEL:
-                    # ダイアログエリアのスクロール
                     self.scroll_offset = max(
                         0, min(self.max_scroll,
                                self.scroll_offset - event.y * 30))
 
                 elif event.type == pygame.KEYDOWN:
-                    if self.state in (self.ST_GREETING, self.ST_TALKING):
-                        if event.key == pygame.K_RETURN:
-                            self._send_message()
-                        elif event.key == pygame.K_BACKSPACE:
-                            self.input_text = self.input_text[:-1]
-                        else:
-                            if event.unicode and len(self.input_text) < 200:
-                                self.input_text += event.unicode
+                    if self._is_tavern_state():
+                        if event.key == pygame.K_ESCAPE:
+                            if self.state in (self.ST_WAITING, self.ST_GREETING,
+                                              self.ST_TALKING, self.ST_VERDICT):
+                                self._return_to_village()
+                        elif self.state in (self.ST_GREETING, self.ST_TALKING):
+                            if event.key == pygame.K_RETURN:
+                                self._send_message()
+                            elif event.key == pygame.K_BACKSPACE:
+                                self.input_text = self.input_text[:-1]
+                            else:
+                                if event.unicode and len(self.input_text) < 200:
+                                    self.input_text += event.unicode
 
             # --- 描画 ---
-            if self.state == self.ST_LOADING:
+            if self.state == self.ST_VILLAGE:
+                self._draw_village_screen()
+
+            elif self.state == self.ST_LODGE:
+                self._draw_location_screen("Lodge", self.lodge_img)
+
+            elif self.state in (self.ST_GUILD, self.ST_SHOP, self.ST_ADVENTURE):
+                title_map = {
+                    self.ST_GUILD: "Guild",
+                    self.ST_SHOP: "Shop",
+                    self.ST_ADVENTURE: "Adventure",
+                }
+                self._draw_location_screen(title_map[self.state], None)
+
+            elif self.state == self.ST_LOADING:
                 self._draw_loading_screen()
+
             else:
+                # タバーン画面
                 self._draw_background()
                 self._draw_portrait()
                 self._draw_character_info()
@@ -776,13 +966,16 @@ class TavernGUI:
                 self._draw_turn_counter()
                 self._draw_status_bar()
 
-                # ボタン
                 self.btn_new.enabled = self.state in (
                     self.ST_WAITING, self.ST_GREETING,
                     self.ST_TALKING, self.ST_VERDICT)
                 self.btn_new.draw(self.screen, self.font_body)
 
-                # 判定オーバーレイ
+                # 戻るボタン（タバーン画面）
+                if self.state in (self.ST_WAITING, self.ST_GREETING,
+                                  self.ST_TALKING, self.ST_VERDICT):
+                    self.btn_back.draw(self.screen, self.font_body)
+
                 self._draw_verdict_overlay()
 
             pygame.display.flip()
