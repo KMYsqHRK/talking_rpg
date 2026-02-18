@@ -349,10 +349,11 @@ class TavernGUI:
         area_w = RIGHT_PANEL_W - PADDING * 2
         area_h = WINDOW_HEIGHT - 220 - 120  # 入力欄+ステータス分を引く
 
-        # 背景パネル
+        # 背景パネル（半透明で背景画像を透かす）
         bg_rect = pygame.Rect(area_x - 5, area_y - 5, area_w + 10, area_h + 10)
-        pygame.draw.rect(self.screen, (*C_WOOD_DARK, 200), bg_rect,
-                         border_radius=6)
+        panel_bg = pygame.Surface((bg_rect.w, bg_rect.h), pygame.SRCALPHA)
+        panel_bg.fill((*C_WOOD_DARK, 160))
+        self.screen.blit(panel_bg, bg_rect.topleft)
         pygame.draw.rect(self.screen, C_GOLD_DIM, bg_rect, 1, border_radius=6)
 
         # クリッピング
