@@ -4,6 +4,8 @@ from typing import Dict, List, NamedTuple, Tuple
 # ============================================
 # 定数（メモリ効率の良い NamedTuple 構造体）
 # ============================================
+class DialogueConfig(NamedTuple):
+    max_turns: int
 
 class WindowConfig(NamedTuple):
     width: int
@@ -40,6 +42,8 @@ class ColorPalette(NamedTuple):
     grey: Tuple[int, int, int]
     input_bg: Tuple[int, int, int]
     firelight: Tuple[int, int, int]
+
+DIALOGUE = DialogueConfig(max_turns=3)
 
 WINDOW = WindowConfig(width=1200, height=800, fps=30)
 

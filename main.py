@@ -9,16 +9,14 @@ import os
 import threading
 from typing import Dict, List, Optional
 
-from Phi2DialogueSimulatour import Phi2DialogueSimulator, MAX_TURNS
-from settings.settings import WINDOW, LAYOUT, PORTRAIT, C, UIButton
-
+from Phi2DialogueSimulatour import Phi2DialogueSimulator
+from settings.settings import DIALOGUE, WINDOW, LAYOUT, PORTRAIT, C, UIButton
 
 # ============================================
 # TavernGUI
 # ============================================
 
 class GUI:
-    """メインのタバーン勧誘GUIクラス"""
 
     # 状態
     ST_VILLAGE = "village"
@@ -531,7 +529,7 @@ class GUI:
         x = LAYOUT.left_panel_w // 2
         y = 420
 
-        remaining = max(0, MAX_TURNS - (self.turn_count - 1))
+        remaining = max(0, DIALOGUE.max_turns - (self.turn_count - 1))
 
         label = self.font_small.render("Turns remaining", True, C.parchment_dark)
         self.screen.blit(label, (x - label.get_width() // 2, y))
@@ -549,8 +547,8 @@ class GUI:
         self.screen.blit(num, (x - num.get_width() // 2, y + 22))
 
         dot_y = y + 62
-        for i in range(MAX_TURNS):
-            cx = x - (MAX_TURNS * 12) // 2 + i * 24 + 12
+        for i in range(DIALOGUE.max_turns):
+            cx = x - (DIALOGUE.max_turns * 12) // 2 + i * 24 + 12
             if i < remaining:
                 pygame.draw.circle(self.screen, color, (cx, dot_y), 8)
             else:
@@ -577,7 +575,7 @@ class GUI:
         elif self.state == self.ST_VERDICT:
             txt = "Verdict shown. Meet another character?"
         else:
-            remaining = max(0, MAX_TURNS - (self.turn_count - 1))
+            remaining = max(0, DIALOGUE.max_turns - (self.turn_count - 1))
             txt = f"Talk to recruit this character. {remaining} turn(s) left."
 
         surf = self.font_small.render(txt, True, C.parchment_dark)
@@ -697,7 +695,7 @@ class GUI:
         if not text or not self.character or self._ai_busy:
             return
 
-        remaining = MAX_TURNS - (self.turn_count - 1)
+        remaining = DIALOGUE.max_turns - (self.turn_count - 1)
         if remaining <= 0:
             return
 
@@ -724,7 +722,7 @@ class GUI:
 
             self.scroll_offset = max(0, self.max_scroll + 200)
 
-            new_remaining = MAX_TURNS - (self.turn_count - 1)
+            new_remaining = DIALOGUE.max_turns - (self.turn_count - 1)
             if new_remaining <= 0:
                 self._finalize_recruitment()
             else:
