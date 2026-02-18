@@ -9,7 +9,7 @@ import os
 import threading
 from typing import Dict, List, Optional, Tuple
 
-from Party_invitation import Phi2DialogueSimulator, MAX_TURNS
+from Phi2DialogueSimulatour import Phi2DialogueSimulator, MAX_TURNS
 
 # ============================================
 # 定数
@@ -97,7 +97,7 @@ class UIButton:
 # TavernGUI
 # ============================================
 
-class TavernGUI:
+class GUI:
     """メインのタバーン勧誘GUIクラス"""
 
     # 状態
@@ -990,5 +990,5 @@ class TavernGUI:
 # ============================================
 
 if __name__ == "__main__":
-    gui = TavernGUI()
+    gui = GUI()
     gui.run()
