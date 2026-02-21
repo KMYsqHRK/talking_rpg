@@ -174,9 +174,9 @@ class ShopScreen(BaseScreen):
     def _get_category_rects(self) -> List[pygame.Rect]:
         rects = []
         x = 100
-        start_y = 200
+        start_y = 280
         for i in range(len(self.categories)):
-            rects.append(pygame.Rect(x, start_y + i * 60, 350, 50))
+            rects.append(pygame.Rect(x, start_y + i * 50, 350, 50))
         return rects
 
     def _handle_category_click(self, pos: Tuple[int, int]):
@@ -267,17 +267,14 @@ class ShopScreen(BaseScreen):
         else:
             self.screen.fill(C.black)
 
-        # タイトルバー
-        title_rect = pygame.Rect(0, 0, WINDOW.width, 70)
-        pygame.draw.rect(self.screen, C.charcoal, title_rect)
-        pygame.draw.line(self.screen, C.gold, (0, 70), (WINDOW.width, 70), 2)
-        title = self.fonts["title"].render("Shop", True, C.gold)
-        self.screen.blit(title, (WINDOW.width // 2 - title.get_width() // 2, 8))
+        # タイトル（左寄せ、Village風）
+        title = self.fonts["title"].render("Shop", True, C.white)
+        self.screen.blit(title, (100, 180))
 
         # 所持金表示
         gold_str = f"Gold: {self.gold:,}"
         gold_surf = self.fonts["header"].render(gold_str, True, C.gold)
-        self.screen.blit(gold_surf, (WINDOW.width - gold_surf.get_width() - 30, 14))
+        self.screen.blit(gold_surf, (100, 600))
 
         # 戻るボタン
         self.btn_back.text = "< Village" if self.state == self.ST_CATEGORY else "< Back"
@@ -300,7 +297,7 @@ class ShopScreen(BaseScreen):
     def _draw_category(self):
         sub = self.fonts["small"].render("What would you like to buy?",
                                          True, C.parchment_dark)
-        self.screen.blit(sub, (100, 150))
+        self.screen.blit(sub, (100, 220))
 
         rects = self._get_category_rects()
         for i, (cat, rect) in enumerate(zip(self.categories, rects)):
@@ -324,7 +321,7 @@ class ShopScreen(BaseScreen):
         # 選択中カテゴリの説明文
         cat = self.categories[self.category_selected]
         desc_x = 500
-        desc_y = 330
+        desc_y = 400
         for line in self.wrap_text(cat["Description"], self.fonts["body"], 500):
             desc_surf = self.fonts["body"].render(line, True, C.parchment)
             self.screen.blit(desc_surf, (desc_x, desc_y))

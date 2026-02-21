@@ -77,6 +77,7 @@ class Game:
                                ("tavern_img", "tavern.png"),
                                ("lodge_img", "lodge.png"),
                                ("shop_img", "shop.png"),
+                               ("adventure_img", "dungeon-entrance.png"),
                                ]:
             path = os.path.join(base_dir, "img", filename)
             if os.path.exists(path):
