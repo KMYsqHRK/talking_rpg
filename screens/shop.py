@@ -268,9 +268,9 @@ class ShopScreen(BaseScreen):
             self.screen.fill(C.black)
 
         # タイトルバー
-        title_rect = pygame.Rect(0, 0, WINDOW.width, 50)
+        title_rect = pygame.Rect(0, 0, WINDOW.width, 70)
         pygame.draw.rect(self.screen, C.charcoal, title_rect)
-        pygame.draw.line(self.screen, C.gold, (0, 50), (WINDOW.width, 50), 2)
+        pygame.draw.line(self.screen, C.gold, (0, 70), (WINDOW.width, 70), 2)
         title = self.fonts["title"].render("Shop", True, C.gold)
         self.screen.blit(title, (WINDOW.width // 2 - title.get_width() // 2, 8))
 
@@ -298,21 +298,16 @@ class ShopScreen(BaseScreen):
             self._draw_message()
 
     def _draw_category(self):
-        sub = self.fonts["body"].render("What would you like to buy?",
+        sub = self.fonts["small"].render("What would you like to buy?",
                                          True, C.parchment_dark)
         self.screen.blit(sub, (100, 150))
 
         rects = self._get_category_rects()
         for i, (cat, rect) in enumerate(zip(self.categories, rects)):
             selected = (i == self.category_selected)
+            color = C.gold if selected else C.parchment_dark
 
-            # 背景
-            bg_color = C.wood_light if selected else C.wood
-            pygame.draw.rect(self.screen, bg_color, rect, border_radius=6)
-            pygame.draw.rect(self.screen, C.gold if selected else C.wood_dark,
-                             rect, 2, border_radius=6)
-
-            # カーソル
+            # 三角カーソル
             if selected:
                 tri_x = rect.x - 10
                 tri_y = rect.y + rect.h // 2
@@ -323,13 +318,17 @@ class ShopScreen(BaseScreen):
                 ])
 
             # テキスト
-            name_surf = self.fonts["header"].render(cat["Category"], True,
-                                                      C.gold if selected else C.parchment)
-            self.screen.blit(name_surf, (rect.x + 15, rect.y + 5))
+            name_surf = self.fonts["village"].render(cat["Category"], True, color)
+            self.screen.blit(name_surf, (rect.x, rect.y + 8))
 
-            desc_surf = self.fonts["small"].render(cat["Description"], True,
-                                                     C.parchment_dark)
-            self.screen.blit(desc_surf, (rect.x + 15, rect.y + 30))
+        # 選択中カテゴリの説明文
+        cat = self.categories[self.category_selected]
+        desc_x = 500
+        desc_y = 330
+        for line in self.wrap_text(cat["Description"], self.fonts["body"], 500):
+            desc_surf = self.fonts["body"].render(line, True, C.parchment)
+            self.screen.blit(desc_surf, (desc_x, desc_y))
+            desc_y += 24
 
         # 操作ヒント
         hint = self.fonts["small"].render(

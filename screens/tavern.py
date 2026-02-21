@@ -150,16 +150,16 @@ class TavernScreen(BaseScreen):
         pygame.draw.line(self.screen, C.gold_dim,
                          (LAYOUT.left_panel_w, 0), (LAYOUT.left_panel_w, WINDOW.height), 2)
 
-        title_rect = pygame.Rect(0, 0, WINDOW.width, 50)
+        title_rect = pygame.Rect(0, 0, WINDOW.width, 70)
         pygame.draw.rect(self.screen, C.wood_dark, title_rect)
         pygame.draw.line(self.screen, C.gold,
-                         (0, 50), (WINDOW.width, 50), 2)
+                         (0, 70), (WINDOW.width, 70), 2)
         title = self.fonts["title"].render("Tavern Recruitment", True, C.gold)
         self.screen.blit(title, (WINDOW.width // 2 - title.get_width() // 2, 8))
 
     def _draw_portrait(self):
         x = LAYOUT.left_panel_w // 2 - PORTRAIT.width // 2
-        y = 70
+        y = 100
         portrait_img = self.assets.get("portrait_img")
 
         if self.character:
