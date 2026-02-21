@@ -75,7 +75,9 @@ class Game:
         # 背景画像
         for key, filename in [("village_img", "village.png"),
                                ("tavern_img", "tavern.png"),
-                               ("lodge_img", "lodge.png")]:
+                               ("lodge_img", "lodge.png"),
+                               ("shop_img", "shop.png"),
+                               ]:
             path = os.path.join(base_dir, "img", filename)
             if os.path.exists(path):
                 raw = pygame.image.load(path).convert()

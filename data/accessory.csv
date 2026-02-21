@@ -1,0 +1,26 @@
+Name,HP,ATK,DEF,WIS,LUC,AGI,Price,Description
+Wooden Ring,0,0,0,0,1,0,50,A simple wooden ring with a faint glow.
+Lucky Charm,0,0,0,0,2,0,120,A small charm said to bring good fortune.
+Iron Bracelet,0,1,1,0,0,0,250,A sturdy bracelet made of iron.
+Traveler's Pendant,0,0,0,1,0,1,380,A pendant favored by wanderers.
+Warrior's Band,0,2,1,0,0,0,520,A band that strengthens the wearer's arm.
+Sage's Brooch,0,0,0,2,1,0,700,A brooch worn by wise scholars.
+Speed Anklet,0,0,0,0,0,3,900,An anklet that quickens the wearer's step.
+Guardian Amulet,0,0,3,0,0,0,1150,An amulet that hardens the wearer's skin.
+Ruby Ring,0,3,0,0,1,0,1400,A ring set with a fiery ruby.
+Mystic Earring,0,0,0,3,1,1,1700,An earring pulsing with mystic energy.
+Wolf Fang Necklace,0,2,0,0,2,2,2100,A necklace strung with wolf fangs.
+Shield Talisman,5,0,3,0,0,1,2500,A talisman that projects a faint barrier.
+Flame Pendant,0,4,0,1,0,1,3000,A pendant burning with inner fire.
+Frost Circlet,0,0,2,3,0,2,3600,A circlet radiating a cold aura.
+Thunder Bangle,0,3,0,2,0,3,4300,A bangle crackling with static charge.
+Mithril Charm,5,2,2,2,1,1,5100,A charm forged from precious mithril.
+Dragon Eye Amulet,10,3,1,2,2,1,6000,An amulet with a dragon eye gemstone.
+Holy Rosary,5,0,2,5,2,0,7000,A sacred rosary blessed by high priests.
+Shadow Locket,0,4,0,2,3,3,8200,A dark locket hiding forbidden power.
+Phoenix Feather Pin,10,2,2,3,3,2,9500,A pin made from a phoenix feather.
+Crystal Tiara,10,3,3,3,2,2,11000,A tiara carved from pure crystal.
+Void Stone Ring,10,4,2,4,2,3,13000,A ring containing a fragment of the void.
+Celestial Crown,15,3,3,5,3,3,15500,A crown shining with starlight.
+Titan's Sigil,15,4,4,4,4,3,18000,A sigil bearing the mark of titans.
+Eternity Pendant,20,5,5,5,5,5,22000,The ultimate accessory beyond mortal craft.
